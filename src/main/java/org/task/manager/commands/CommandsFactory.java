@@ -14,6 +14,6 @@ public class CommandsFactory {
 //            case REMOVE -> {}
             default -> {return null;}
         }
-//        return null;
+        return null;
     }
 }
