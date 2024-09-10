@@ -8,12 +8,21 @@ public class CommandsFactory {
             case LIST -> {
                 return new ListCommand();
             }
-            case NEW -> {}
-//            case EDIT -> {}
-//            case COMPLETE -> {}
-//            case REMOVE -> {}
-            default -> {return null;}
+            case NEW -> {
+                return new NewCommand();
+            }
+            case EDIT -> {
+                return new EditCommand();
+            }
+            case COMPLETE -> {
+                return new CompleteCommand();
+            }
+            case REMOVE -> {
+                return new RemoveCommand();
+            }
+            default -> {
+                return null;
+            }
         }
-        return null;
     }
 }

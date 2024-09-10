@@ -2,6 +2,7 @@ package org.task.manager.commands;
 
 import org.task.manager.models.Status;
 import org.task.manager.models.Task;
+import org.task.manager.models.ToDoList;
 
 import java.util.List;
 import java.util.function.Predicate;
@@ -9,7 +10,7 @@ import java.util.function.Predicate;
 public class ListCommand implements Command {
 
     @Override
-    public void execute(String[] args, final List<Task> tasks) {
+    public void execute(String[] args, final ToDoList tasks) {
         Predicate<Task> predicate = task -> true;;
         if (args.length >= 2) {
             if (!args[0].equals("-s")) {

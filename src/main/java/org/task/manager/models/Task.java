@@ -1,10 +1,7 @@
 package org.task.manager.models;
 
-import org.task.manager.exceptions.TaskCreationException;
-
 import java.time.LocalDate;
-import java.util.Date;
-import java.util.Map;
+import java.time.format.DateTimeParseException;
 
 public class Task {
     private int id;
@@ -14,7 +11,6 @@ public class Task {
     private LocalDate deadline;
     private Status status;
     private LocalDate complete;
-    private boolean changed;
 
     public Task() {
     }
@@ -27,16 +23,16 @@ public class Task {
             String deadline,
             String status,
             String complete
-    ) throws TaskCreationException, NullPointerException {
+    ) {
         try {
             this.id = Integer.parseInt(id);
         } catch (NumberFormatException e) {
-            throw new TaskCreationException("Task id must be an integer, got '" + id + "'");
+            throw new IllegalArgumentException("Task id must be an integer, got '" + id + "'");
         }
 
         setCaption(caption);
 
-        this.description = description;
+        setDescription(description);
 
         setPriority(priority);
 
@@ -44,62 +40,59 @@ public class Task {
         try {
             this.status = Status.valueOf(status.toUpperCase());
         } catch (IllegalArgumentException e) {
-            throw new TaskCreationException("Not a valid status '" + status.toUpperCase() + "'");
+            throw new IllegalArgumentException("Not a valid status '" + status.toUpperCase() + "'");
         }
         if (complete.isEmpty()) {
             this.complete = null;
         } else {
             this.complete = LocalDate.parse(complete);
         }
-        this.changed = false;
     }
 
     /* SETTERS */
 
     public void setId(int id) {
         this.id = id;
-        changed = true;
     }
 
-    public void setStatus(Status status) {
-        this.status = status;
-        changed = true;
-    }
-
-    public void setComplete(LocalDate complete) {
-        this.complete = complete;
-        changed = true;
+    public void complete() {
+        this.status = Status.DONE;
+        this.complete = LocalDate.now();
     }
 
     public void setCaption(String caption) {
         if (caption.isEmpty() || caption.length() > 50) {
-            throw new TaskCreationException("Task caption length should be from 1 to 50 characters, but is " + caption.length());
+            throw new IllegalArgumentException("Task caption length should be from 1 to 50 characters, but is " + caption.length());
         }
         this.caption = caption;
-        changed = true;
     }
 
     public void setDescription(String description) {
         this.description = description;
-        changed = true;
     }
 
-    public void setDeadline(LocalDate deadline) {
-        this.deadline = deadline;
-        changed = true;
+    public void setDeadline(String deadline) {
+        try {
+            this.deadline = LocalDate.parse(deadline);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("'" + deadline + "' is not a valid date");
+        }
     }
 
     public void setPriority(String priority) {
         try {
             int priorityInt = Integer.parseInt(priority);
             if (priorityInt < 0 || priorityInt > 10) {
-                throw new TaskCreationException("Task priority should be from 0 to 10, but is " + priority);
+                throw new IllegalArgumentException("Task priority should be from 0 to 10, but is " + priority);
             }
             this.priority = priorityInt;
         } catch (NumberFormatException e) {
-            throw new TaskCreationException("Task priority should be an integer, but is '" + priority + "'");
+            throw new IllegalArgumentException("Task priority should be an integer, but is '" + priority + "'");
         }
-        changed = true;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
     }
 
     /* GETTERS */
@@ -108,8 +101,28 @@ public class Task {
         return id;
     }
 
+    public String getCaption() {
+        return caption;
+    }
+
     public Status getStatus() {
         return status;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public Integer getPriority() {
+        return priority;
+    }
+
+    public LocalDate getDeadline() {
+        return deadline;
+    }
+
+    public LocalDate getComplete() {
+        return complete;
     }
 
     @Override
