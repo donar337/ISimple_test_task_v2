@@ -1,4 +1,4 @@
-package org.task.manager.producers;
+package org.task.manager.storage;
 
 import org.task.manager.models.Status;
 import org.task.manager.models.Task;
@@ -17,9 +17,24 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 
+/**
+ * The {@code XMLTaskStorage} class implements the {@link TaskStorage} interface,
+ * providing functionality for reading and writing tasks in XML format.
+ */
 public class XMLTaskStorage implements TaskStorage {
+    /**
+     * The XML file used for storage.
+     */
     private File xmlFile;
 
+    /**
+     * Reads tasks from the specified XML file and returns them as a {@link ToDoList}.
+     *
+     * @param file the XML file from which to read the tasks.
+     * @return a {@link ToDoList} containing the tasks from the file.
+     * @throws FileNotFoundException    if the specified file cannot be found.
+     * @throws IllegalArgumentException if the XML file is invalid or cannot be parsed.
+     */
     @Override
     public ToDoList getTasks(File file) throws FileNotFoundException {
         this.xmlFile = file;
@@ -28,20 +43,24 @@ public class XMLTaskStorage implements TaskStorage {
             DocumentBuilder docBuilder = documentBuilderFactory.newDocumentBuilder();
             Document document = docBuilder.parse(file);
             Element root = document.getDocumentElement();
+
             if (!root.getTagName().equals("ToDoList")) {
                 throw new IllegalArgumentException("Invalid XML file");
             }
-            NodeList nList = root.getChildNodes();
 
+            NodeList nList = root.getChildNodes();
             ToDoList toDoList = new ToDoList();
+
             for (int i = 0; i < nList.getLength(); i++) {
                 Node nNode = nList.item(i);
 
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element) nNode;
+
                     if (!element.getTagName().equals("Task")) {
                         throw new IllegalArgumentException("Invalid XML file format");
                     }
+
                     Task task = new Task(
                             element.getAttribute("id"),
                             element.getAttribute("caption"),
@@ -52,11 +71,11 @@ public class XMLTaskStorage implements TaskStorage {
                             parseElementField(element, "Complete")
                     );
 
-
                     toDoList.add(task, task.getId());
                 }
             }
             return toDoList;
+
         } catch (FileNotFoundException e) {
             throw e;
         } catch (ParserConfigurationException | SAXException | IOException | NullPointerException e) {
@@ -64,6 +83,12 @@ public class XMLTaskStorage implements TaskStorage {
         }
     }
 
+    /**
+     * Saves the tasks in the given {@code ToDoList} to the XML file.
+     *
+     * @param tasks the {@link ToDoList} containing tasks to save.
+     * @throws IllegalArgumentException if an error occurs during the XML transformation process.
+     */
     @Override
     public void saveTasks(ToDoList tasks) {
         try {
@@ -73,16 +98,18 @@ public class XMLTaskStorage implements TaskStorage {
 
             Element root = document.createElement("ToDoList");
             document.appendChild(root);
+
             tasks.stream().forEach(t -> root.appendChild(taskToXML(document, t)));
 
-            Transformer tf = TransformerFactory.newInstance().newTransformer();
-            tf.setOutputProperty(OutputKeys.INDENT, "yes");
-            tf.setOutputProperty(OutputKeys.METHOD, "xml");
-            tf.setOutputProperty(OutputKeys.STANDALONE, "no");
+            Transformer transformer = TransformerFactory.newInstance().newTransformer();
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.STANDALONE, "no");
 
             DOMSource domSource = new DOMSource(document);
-            StreamResult sr = new StreamResult(xmlFile);
-            tf.transform(domSource, sr);
+            StreamResult streamResult = new StreamResult(xmlFile);
+            transformer.transform(domSource, streamResult);
+
         } catch (TransformerException | ParserConfigurationException e) {
             throw new IllegalArgumentException(e);
         }
@@ -101,6 +128,7 @@ public class XMLTaskStorage implements TaskStorage {
         root.appendChild(makeAttribute(document, "Priority", Integer.toString(task.getPriority())));
         root.appendChild(makeAttribute(document, "Deadline", task.getDeadline().toString()));
         root.appendChild(makeAttribute(document, "Status", task.getStatus().toString().toLowerCase()));
+
         if (task.getStatus() == Status.DONE) {
             root.appendChild(makeAttribute(document, "Complete", task.getComplete().toString()));
         }
