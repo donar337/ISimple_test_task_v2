@@ -10,7 +10,7 @@ public class ListCommand implements Command {
 
     @Override
     public void execute(String[] args, final ToDoList tasks) {
-        Predicate<Task> predicate = task -> true;;
+        Predicate<Task> predicate = task -> true;
         if (args.length >= 2) {
             if (!args[0].equals("-s")) {
                 throw new IllegalArgumentException("Incorrect command arguments: '" + args[0] + "'");
