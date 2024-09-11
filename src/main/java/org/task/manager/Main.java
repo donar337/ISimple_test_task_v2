@@ -2,10 +2,9 @@ package org.task.manager;
 
 import org.task.manager.commands.Command;
 import org.task.manager.commands.CommandsFactory;
-import org.task.manager.models.CommandType;
 import org.task.manager.models.ToDoList;
-import org.task.manager.producers.TaskProducers;
-import org.task.manager.producers.XMLTaskProducer;
+import org.task.manager.producers.TaskStorage;
+import org.task.manager.producers.TaskStorageFactory;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -14,47 +13,53 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        if (args == null || args.length == 0) {
-            System.out.println("Требуется по крайней мере один аргумент программы: путь до файла с задачами");
-            System.exit(0);
+        if (args == null || args.length < 2) {
+            System.out.println("Expected at least two arguments: [input type] and [path to input file]");
+            return;
         }
 
-        ToDoList toDoList = null;
-        System.out.println("Пытаемся загрузить задачи, подождите");
-        File inputFile = new File(args[0]);
-        TaskProducers producer = new XMLTaskProducer();
+        ToDoList toDoList;
+        TaskStorage storage;
+        System.out.println("Loading tasks from, wait please");
+
         try {
-            toDoList = producer.getTasks(inputFile);
+            File inputFile = new File(args[1]);
+            TaskStorageFactory factory = new TaskStorageFactory();
+            storage = factory.createTaskStorage(args[0]);
+            toDoList = storage.getTasks(inputFile);
         } catch (FileNotFoundException | IllegalArgumentException e) {
-            System.out.println("Ошибка при обработке входного файла: " + e.getMessage());
-            System.exit(0);
+            System.out.println("Exception while parsing input file: " + e.getMessage());
+            return;
         }
 
-        System.out.println("Загружено задач: " + toDoList.size());
+        System.out.println("Tasks loaded: " + toDoList.size());
 
         Scanner in = new Scanner(System.in);
         CommandsFactory factory = new CommandsFactory();
 
         while (in.hasNextLine()) {
             String input = in.nextLine();
+            if (input.equalsIgnoreCase("quit")) {
+                break;
+            }
             var flags = input.split(" ");
             Command command;
             try {
-                CommandType commandType = CommandType.valueOf(flags[0].toUpperCase());
-                command = factory.createCommand(commandType);
+                command = factory.createCommand(flags[0]);
             } catch (IllegalArgumentException e) {
-                System.out.println("Команда '" + flags[0] + "' не найдена");
+                System.out.println("Command '" + flags[0] + "' does not exist, type help to get command list");
                 continue;
             }
             try {
                 command.execute(Arrays.copyOfRange(flags, 1, flags.length), toDoList);
-                System.out.println("Успешно");
+                System.out.println("Command successfully executed");
             } catch (IllegalArgumentException e) {
-                System.out.println("Ошибка при исполнении команды: " + e.getMessage());
+                System.out.println("Error while executing command: " + e.getMessage());
             }
         }
 
         in.close();
-        producer.saveTasks(toDoList);
+        System.out.println("Saving tasks, wait please");
+        storage.saveTasks(toDoList);
     }
 }

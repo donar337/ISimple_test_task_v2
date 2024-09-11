@@ -17,7 +17,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.*;
 
-public class XMLTaskProducer implements TaskProducers {
+public class XMLTaskStorage implements TaskStorage {
     private File xmlFile;
 
     @Override
@@ -40,7 +40,7 @@ public class XMLTaskProducer implements TaskProducers {
                 if (nNode.getNodeType() == Node.ELEMENT_NODE) {
                     Element element = (Element) nNode;
                     if (!element.getTagName().equals("Task")) {
-                        throw new IllegalArgumentException("Invalid XML file");
+                        throw new IllegalArgumentException("Invalid XML file format");
                     }
                     Task task = new Task(
                             element.getAttribute("id"),
@@ -60,7 +60,7 @@ public class XMLTaskProducer implements TaskProducers {
         } catch (FileNotFoundException e) {
             throw e;
         } catch (ParserConfigurationException | SAXException | IOException | NullPointerException e) {
-            throw new IllegalArgumentException(e.getMessage()); //TODO create adequate exception
+            throw new IllegalArgumentException(e.getMessage());
         }
     }
 
@@ -81,14 +81,10 @@ public class XMLTaskProducer implements TaskProducers {
             tf.setOutputProperty(OutputKeys.STANDALONE, "no");
 
             DOMSource domSource = new DOMSource(document);
-            StreamResult sr = new StreamResult(xmlFile); //new File("Data.xml")
+            StreamResult sr = new StreamResult(xmlFile);
             tf.transform(domSource, sr);
-        } catch (TransformerConfigurationException e) {
-            throw new RuntimeException(e);
-        } catch (TransformerException e) {
-            throw new RuntimeException(e);
-        } catch (ParserConfigurationException e) {
-            throw new RuntimeException(e);
+        } catch (TransformerException | ParserConfigurationException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 

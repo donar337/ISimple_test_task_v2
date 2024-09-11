@@ -14,16 +14,16 @@ public class NewCommand implements Command {
         Task task = new Task();
         Scanner in = new Scanner(System.in);
 
-        readField(in, "заголовок", task::setCaption);
-        readField(in, "описание", task::setDescription);
-        readField(in, "приоритет", task::setPriority);
-        readField(in, "дедлайн", task::setDeadline);
+        readField(in, "caption", task::setCaption);
+        readField(in, "description", task::setDescription);
+        readField(in, "priority", task::setPriority);
+        readField(in, "deadline", task::setDeadline);
         task.setStatus(Status.NEW);
         tasks.add(task);
     }
 
     private void readField(Scanner in, String field, Consumer<String> setter) {
-        System.out.println("Введите " + field);
+        System.out.println("Enter " + field);
         if (in.hasNextLine()) {
             String line = in.nextLine();
             setter.accept(line);
